@@ -4,17 +4,12 @@
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 
 
-def caculate_area(base, height):
+def leap_year(test):
     # Use a breakpoint in the code line below to debug your script.
-    area = base * height
-    return area
+    return test % 4 == 0 and test % 100 != 0 or test % 400 == 0
 
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    base = int(input("base:"))
-    height = int(input("height:"))
-    caculate_area( base,height)
-    print(caculate_area( base,height))
+    test = int(input("leap_year:"))
+    print(leap_year(test))
 
 

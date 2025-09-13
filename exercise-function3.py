@@ -4,17 +4,12 @@
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 
 
-def caculate_area(base, height):
+def power(base, exponent=2):
     # Use a breakpoint in the code line below to debug your script.
-    area = base * height
-    return area
+   return base ** exponent
 
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    base = int(input("base:"))
-    height = int(input("height:"))
-    caculate_area( base,height)
-    print(caculate_area( base,height))
+    base_exponent = map(int, (input("base and exponent:").split(" ")))
+    print(power(*base_exponent))
 
 

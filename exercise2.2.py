@@ -4,17 +4,15 @@
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 
 
-def caculate_area(base, height):
+def count_vowels(test):
     # Use a breakpoint in the code line below to debug your script.
-    area = base * height
-    return area
+    vowels = ["a", "e", "i", "o", "u"]
+    return sum(1 for char in test if char.lower() in vowels)
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    base = int(input("base:"))
-    height = int(input("height:"))
-    caculate_area( base,height)
-    print(caculate_area( base,height))
+    test = input("words:")
+    print(count_vowels(test))
 
 

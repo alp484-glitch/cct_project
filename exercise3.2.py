@@ -6,9 +6,7 @@
 
 def biggest(*test):
     # Use a breakpoint in the code line below to debug your script.
-    temp_list = list(map(int,test))
-    sorted_list = sorted(temp_list, reverse=True)
-    return sorted_list[0]
+    return max(test)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':

